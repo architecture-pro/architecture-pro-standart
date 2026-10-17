@@ -1,0 +1,44 @@
+@startuml
+
+title Standard Bank - Online Credit Application Component Diagram
+
+top to bottom direction
+
+!include ../../c4-local/C4-Component.puml
+
+Container(Website, "Сайт", "React / PHP", "Подача кредитных заявок")
+Container(InternetBank, "Интернет-банк", "ASP.NET MVC / .NET Framework", "Подача кредитных заявок")
+Container(ProductsService, "Products Service", "Java / Spring Boot", "Кредитные продукты и условия")
+Container(ABS, "АБС", "Delphi / Oracle", "Работа с кредитными заявками")
+Container(CreditPipeline, "Кредитный конвейер", "Camunda / Oracle", "Обработка кредитных заявок")
+Container(Scoring, "Система скоринга", "Python / Flask", "Кредитный скоринг")
+Container(SMSGateway, "СМС-шлюз", "Существующая система", "Отправка уведомлений")
+
+ContainerQueue(Kafka, "Kafka", "Apache Kafka", "Асинхронная передача заявок и событий")
+ContainerDb(ApplicationsDB, "Applications DB", "MS SQL", "Хранение заявок и статусов")
+Container_Boundary(ApplicationService, "Application Service - Java / Spring Boot") {
+    Component(CreditAPI, "Credit API", "Spring REST", "Приём кредитных заявок")
+    Component(CreditApplicationHandler, "Credit Application Handler", "Java", "Обработка кредитных заявок")
+    Component(ScoringIntegration, "Scoring Integration", "Java", "Интеграция с системой скоринга")
+    Component(CreditPipelineIntegration, "Credit Pipeline Integration", "Java", "Передача заявок в кредитный конвейер")
+    Component(ABSIntegration, "ABS Integration", "Java", "Передача данных заявок в АБС")
+    Component(NotificationHandler, "Notification Handler", "Java", "Инициирование СМС-уведомлений")
+}
+
+Rel(Website, ProductsService, "Получает кредитные предложения", "HTTPS / REST")
+Rel(InternetBank, ProductsService, "Получает кредитные предложения", "HTTPS / REST")
+Rel(Website, CreditAPI, "Отправляет заявку", "HTTPS / REST")
+Rel(InternetBank, CreditAPI, "Отправляет заявку", "HTTPS / REST")
+Rel(CreditAPI, CreditApplicationHandler, "Передаёт заявку")
+Rel(CreditApplicationHandler, ApplicationsDB, "Сохраняет заявки и статусы", "SQL")
+Rel(CreditApplicationHandler, ScoringIntegration, "Запрашивает скоринг")
+Rel(ScoringIntegration, Scoring, "Выполняет скоринг", "REST API")
+Rel(CreditApplicationHandler, CreditPipelineIntegration, "Передаёт заявку")
+Rel(CreditPipelineIntegration, CreditPipeline, "Отправляет кредитную заявку", "REST API")
+Rel(CreditApplicationHandler, ABSIntegration, "Передаёт данные заявки")
+Rel(ABSIntegration, ABS, "Передаёт данные на обработку", "Асинхронно")
+Rel(CreditApplicationHandler, Kafka, "Публикует заявки и события", "Kafka")
+Rel(CreditApplicationHandler, NotificationHandler, "Инициирует уведомление")
+Rel(NotificationHandler, SMSGateway, "Отправляет СМС")
+
+@enduml

@@ -1,0 +1,33 @@
+@startuml
+
+title Standard Bank - Online Credit Application Context Diagram
+
+top to bottom direction
+
+!include ../../c4-local/C4-Context.puml
+
+Person(client, "Клиент", "Подаёт заявку на кредит")
+Person(branchManager, "Сотрудник отделения", "Работает с кредитными заявками")
+Person(creditManager, "Сотрудник кредитования", "Обрабатывает кредитные заявки")
+
+System(CreditApplication, "Онлайн-оформление кредитов", "Приём и обработка онлайн-заявок на кредит")
+
+System_Ext(Website, "Сайт банка", "Подача кредитных заявок")
+System_Ext(InternetBank, "Интернет-банк", "Подача заявок и предодобренные предложения")
+System_Ext(ABS, "АБС", "Работа с кредитными заявками в отделении")
+System_Ext(CreditPipeline, "Кредитный конвейер", "Обработка кредитных заявок")
+System_Ext(Scoring, "Система скоринга", "Кредитная оценка")
+System_Ext(SMSGateway, "СМС-шлюз", "Отправка уведомлений")
+
+Rel(client, Website, "Подаёт кредитную заявку")
+Rel(client, InternetBank, "Подаёт кредитную заявку")
+Rel(Website, CreditApplication, "Передаёт заявку", "HTTPS / REST")
+Rel(InternetBank, CreditApplication, "Передаёт заявку", "HTTPS / REST")
+Rel(CreditApplication, Scoring, "Запрашивает скоринг", "REST API")
+Rel(CreditApplication, CreditPipeline, "Передаёт кредитную заявку", "REST API")
+Rel(CreditApplication, ABS, "Передаёт данные заявки", "Асинхронно")
+Rel(CreditApplication, SMSGateway, "Инициирует уведомления")
+Rel(branchManager, ABS, "Работает с кредитными заявками")
+Rel(creditManager, CreditPipeline, "Обрабатывает заявки")
+
+@enduml

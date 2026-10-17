@@ -1,0 +1,27 @@
+@startuml
+
+title Standard Bank MVP - Context Diagram
+
+top to bottom direction
+
+!include ../../c4-local/C4-Context.puml
+
+Person(client, "Клиент", "Подаёт заявки на депозиты и кредиты")
+Person(callManager, "Менеджер кол-центра", "Обрабатывает заявки с сайта")
+Person(backOffice, "Сотрудник бэк-офиса", "Обрабатывает заявки и согласовывает условия")
+Person(branchManager, "Сотрудник отделения", "Работает с кредитными заявками")
+
+System(BankSystem, "Банк Стандарт", "Сайт, интернет-банк и банковские системы")
+
+System_Ext(BKI, "Бюро кредитных историй", "Предоставляет кредитную историю")
+System_Ext(Telecom, "Телеком-оператор", "Отправляет СМС клиентам")
+
+Rel(client, BankSystem, "Подаёт заявки на депозиты и кредиты")
+Rel(callManager, BankSystem, "Обрабатывает заявки клиентов")
+Rel(backOffice, BankSystem, "Согласовывает условия и обрабатывает заявки")
+Rel(branchManager, BankSystem, "Создаёт и продолжает кредитные заявки")
+
+Rel(BankSystem, BKI, "Запрашивает кредитную историю", "REST API")
+Rel(BankSystem, Telecom, "Отправляет СМС-уведомления")
+
+@enduml
