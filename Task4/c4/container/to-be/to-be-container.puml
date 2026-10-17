@@ -1,0 +1,36 @@
+@startuml
+
+title Standard Bank - Deposit Rates Component Diagram
+
+top to bottom direction
+
+!include ../../c4-local/C4-Component.puml
+
+Person(backOffice, "Сотрудник бэк-офиса")
+Person(callManager, "Менеджер кол-центра банка")
+Person(partnerManager, "Менеджер партнёрского кол-центра")
+
+Container(ABS, "АБС", "Delphi / Oracle", "Управление депозитными ставками")
+Container(CallCenter, "Система кол-центра", "React / Spring Boot", "Консультирование клиентов")
+
+System_Ext(PartnerSystem, "Система партнёрского кол-центра", "Получение депозитных ставок в виде файлов")
+
+Container_Boundary(ProductsService, "Products Service - Java / Spring Boot") {
+    Component(RatesSync, "Rates Sync", "Java", "Получает актуальные ставки из АБС")
+    Component(RatesAPI, "Rates API", "Spring REST", "Предоставляет актуальные депозитные ставки")
+    Component(RatesExport, "Rates Export", "Java", "Формирует и передаёт файлы со ставками")
+
+    ComponentDb(RatesDB, "Rates DB", "MS SQL", "Хранит актуальную копию депозитных ставок")
+}
+
+Rel(backOffice, ABS, "Работает с депозитными ставками")
+Rel(ABS, RatesSync, "Предоставляет актуальные ставки", "Интеграция с АБС")
+Rel(RatesSync, RatesDB, "Обновляет ставки", "SQL")
+Rel(callManager, CallCenter, "Просматривает депозитные ставки")
+Rel(CallCenter, RatesAPI, "Запрашивает актуальные ставки", "HTTPS / REST")
+Rel(RatesAPI, RatesDB, "Получает ставки", "SQL")
+Rel(RatesExport, RatesDB, "Получает ставки для экспорта", "SQL")
+Rel(RatesExport, PartnerSystem, "Передаёт файл со ставками", "SFTP")
+Rel(partnerManager, PartnerSystem, "Просматривает депозитные ставки")
+
+@enduml

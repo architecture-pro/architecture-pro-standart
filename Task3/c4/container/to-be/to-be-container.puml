@@ -1,0 +1,62 @@
+@startuml
+
+title Standard Bank MVP - Container Diagram
+
+top to bottom direction
+
+!include ../../c4-local/C4-Container.puml
+
+Person(client, "Клиент")
+Person(callManager, "Менеджер кол-центра")
+Person(backOffice, "Сотрудник бэк-офиса")
+Person(branchManager, "Сотрудник отделения")
+
+System_Ext(BKI, "Бюро кредитных историй", "REST API")
+System_Ext(Telecom, "Телеком-оператор", "Отправка СМС")
+
+System_Boundary(Bank, "Банк Стандарт") {
+    Container(Website, "Сайт", "React / PHP", "Подача заявок и просмотр продуктов")
+    Container(InternetBank, "Интернет-банк", "ASP.NET MVC / .NET Framework", "Личный кабинет клиента")
+    Container(ApplicationService, "Application Service", "Java / Spring Boot", "Приём и обработка онлайн-заявок")
+    Container(ProductsService, "Products Service", "Java / Spring Boot", "Управление условиями депозитов и кредитов")
+
+    ContainerDb(ApplicationsDB, "Applications DB", "MS SQL", "Заявки и статусы обработки")
+    
+    ContainerQueue(Kafka, "Kafka", "Apache Kafka", "Асинхронная передача заявок и событий")
+    Container(ABS, "АБС", "Delphi / Oracle", "Открытие депозитов и банковские операции")
+    Container(CallCenter, "Система кол-центра", "React / Spring Boot", "Обработка заявок с сайта")
+    Container(CreditPipeline, "Кредитный конвейер", "Camunda / Oracle", "Обработка кредитных заявок")
+    Container(Scoring, "Система скоринга", "Python / Flask", "Кредитный скоринг")
+    Container(SMSGateway, "СМС-шлюз", "Существующая система", "Отправка СМС")
+}
+
+Rel(client, Website, "Подаёт заявки")
+Rel(client, InternetBank, "Подаёт заявки")
+
+Rel(callManager, CallCenter, "Обрабатывает заявки")
+Rel(backOffice, ABS, "Обрабатывает депозиты")
+Rel(branchManager, ABS, "Работает с кредитными заявками")
+
+Rel(Website, ProductsService, "Получает условия продуктов", "HTTPS / REST")
+Rel(InternetBank, ProductsService, "Получает условия продуктов", "HTTPS / REST")
+
+Rel(Website, ApplicationService, "Передаёт заявки", "HTTPS / REST")
+Rel(InternetBank, ApplicationService, "Передаёт заявки", "HTTPS / REST")
+
+Rel(ApplicationService, ApplicationsDB, "Сохраняет заявки", "SQL")
+Rel(ApplicationService, Kafka, "Публикует заявки", "Kafka")
+
+Rel(ApplicationService, CallCenter, "Передаёт заявки с сайта", "REST API")
+
+Rel(ApplicationService, Scoring, "Запрашивает скоринг", "REST API")
+Rel(Scoring, BKI, "Получает кредитную историю", "REST API")
+
+Rel(ApplicationService, CreditPipeline, "Передаёт кредитные заявки", "REST API")
+
+Rel(ApplicationService, ABS, "Передаёт заявки на обработку", "Асинхронно")
+
+Rel(ABS, SMSGateway, "Инициирует СМС")
+Rel(ApplicationService, SMSGateway, "Отправляет уведомления")
+Rel(SMSGateway, Telecom, "Передаёт СМС")
+
+@enduml
